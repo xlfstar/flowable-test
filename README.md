@@ -49,38 +49,76 @@ flowable-test/
 | --- | --- |
 | JDK | 17+ |
 | Maven | 无需安装（使用 `mvnw` 包装器） |
-| MySQL | 8.0+ |
+| MySQL | 8.0+（与 SQL Server 二选一） |
+| SQL Server | 2019+（与 MySQL 二选一） |
 | Node.js | 18+（推荐 20+） |
 
 ## 启动步骤
 
 ### 1. 初始化数据库
 
-**全新数据库**（会创建业务表，Flowable 引擎表在启动时自动创建）：
+项目使用 **Flyway 自动创建业务表**，Flowable 引擎表由 Flowable 在启动时自动创建。
 
-```bash
-mysql -uroot -p < backend/sql/init.sql
+**MySQL 全新数据库**：只需要创建空数据库：
+
+```sql
+CREATE DATABASE flowable_demo DEFAULT CHARACTER SET utf8mb4;
 ```
 
-**已有数据库升级**（增加部门表、岗位表、用户组织字段、请假审批人快照字段）：
+**SQL Server 全新数据库**：只需要创建空数据库：
+
+```sql
+CREATE DATABASE flowable_demo COLLATE Chinese_PRC_CI_AS;
+```
+
+Flyway 会根据连接类型自动选择：
+
+```text
+backend/src/main/resources/db/migration/mysql/V1__init_business_tables.sql
+backend/src/main/resources/db/migration/sqlserver/V1__init_business_tables.sql
+```
+
+正常情况下不需要手动执行建表脚本。也可以手动执行 `backend/sql/init.sql` 或对应的 Flyway SQL 文件。
+
+**已有数据库升级**（旧版本项目升级到当前组织架构/文件表）：
 
 ```bash
 mysql -uroot -p flowable_demo < backend/sql/upgrade-org.sql
+mysql -uroot -p flowable_demo < backend/sql/upgrade-file.sql
 ```
 
-升级脚本可重复执行，已存在的表/字段/索引会自动跳过。升级后重启后端，`DataInitializer` 会幂等补齐示例组织数据和默认账号。
+升级脚本可重复执行。已有数据库首次启动时，Flyway 会以版本 1 建立基线，不会重复执行 V1 建表脚本。
 
-### 2. 修改数据库连接
+### 2. 配置数据库连接
 
-编辑 `backend/src/main/resources/application.yml`：
+`application.yml` 不写死数据库驱动，Spring Boot 会根据 JDBC URL 自动选择 MySQL 或 SQL Server 驱动。
+
+默认连接 MySQL：
 
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/flowable_demo?...
-    username: root
-    password: root      # 改成你的密码
+    url: ${DB_URL:jdbc:mysql://localhost:3306/flowable_demo?...}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
 ```
+
+切换到 SQL Server 不需要改 Java 代码，只改连接信息：
+
+```powershell
+$env:DB_URL='jdbc:sqlserver://localhost:1433;databaseName=flowable_demo;encrypt=true;trustServerCertificate=true'
+$env:DB_USERNAME='sa'
+$env:DB_PASSWORD='YourStrong!Passw0rd'
+```
+
+或者使用内置的 SQL Server Profile：
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=sqlserver
+```
+
+`application-sqlserver.yml` 里的默认密码只是示例，使用前请修改。
 
 ### 3. 启动后端
 
@@ -106,6 +144,43 @@ npm run dev
 ```
 
 访问 http://localhost:5173 。前端通过 Vite 代理把 `/api` 转发到 `http://localhost:8080`。
+
+## 数据库自动识别（MySQL / SQL Server）
+
+项目已经做成“连接哪种数据库就用哪种”：
+
+- `pom.xml` 同时包含 `mysql-connector-j` 和 `mssql-jdbc`
+- `application.yml` 不配置 `driver-class-name`，Spring Boot 根据 `spring.datasource.url` 自动选择驱动
+- MyBatis-Plus 分页使用 `new PaginationInnerInterceptor()`，自动识别 MySQL / SQL Server 方言
+- Flowable 根据 JDBC URL 自动选择数据库方言，`flowable.database-schema-update: true` 自动创建 `ACT_*` / `FLW_*` 表
+- Flyway 根据 `{vendor}` 自动执行 `db/migration/mysql` 或 `db/migration/sqlserver` 下的业务表脚本
+
+切换数据库时只需要改连接配置：
+
+```powershell
+# MySQL
+$env:DB_URL='jdbc:mysql://localhost:3306/flowable_demo?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true'
+$env:DB_USERNAME='root'
+$env:DB_PASSWORD='root'
+
+# SQL Server
+$env:DB_URL='jdbc:sqlserver://localhost:1433;databaseName=flowable_demo;encrypt=true;trustServerCertificate=true'
+$env:DB_USERNAME='sa'
+$env:DB_PASSWORD='YourStrong!Passw0rd'
+```
+
+SQL Server 注意事项：
+
+- 推荐使用 `sa`，或确保数据库用户的默认 schema 是 `dbo`
+- 用户需要 `db_owner` 权限，Flowable 才能在第一次启动时自动建引擎表
+- 本地开发可以使用 `trustServerCertificate=true`，生产环境请配置可信证书
+- 命名实例示例：
+
+```text
+jdbc:sqlserver://localhost\SQLEXPRESS;databaseName=flowable_demo;encrypt=true;trustServerCertificate=true
+```
+
+已有数据库第一次接入 Flyway 时会自动建立基线版本 1，不会重复执行 V1 建表脚本。
 
 ## 组织架构模型
 

@@ -118,8 +118,7 @@ public class FormDefinitionService {
 
     private WfForm findByKey(String formKey) {
         return wfFormMapper.selectOne(Wrappers.<WfForm>lambdaQuery()
-                .eq(WfForm::getFormKey, formKey)
-                .last("limit 1"));
+                .eq(WfForm::getFormKey, formKey));
     }
 
     private void apply(WfForm entity, FormSaveRequest request) {

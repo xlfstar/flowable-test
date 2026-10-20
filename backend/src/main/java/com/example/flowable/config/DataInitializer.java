@@ -1,6 +1,7 @@
 package com.example.flowable.config;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.flowable.entity.SysDepartment;
 import com.example.flowable.entity.SysPosition;
 import com.example.flowable.entity.SysUser;
@@ -72,7 +73,7 @@ public class DataInitializer implements ApplicationRunner {
         try {
             sysDepartmentMapper.selectCount(null);
             sysPositionMapper.selectCount(null);
-            sysUserMapper.selectList(Wrappers.<SysUser>lambdaQuery().last("LIMIT 1"));
+            sysUserMapper.selectPage(new Page<>(1, 1), null);
         } catch (Exception e) {
             throw new IllegalStateException(
                     "组织架构表或字段缺失，请先执行 backend/sql/upgrade-org.sql 或重新执行 backend/sql/init.sql", e);
