@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             targetNamespace="http://example.com/flowable">
+
+    <process id="leaveProcess" name="请假审批流程" isExecutable="true">
+        <documentation>员工请假审批流程: 申请人所在部门领导审批; 超过3天增加上级领导审批。审批人按组织架构动态解析。</documentation>
+
+        <startEvent id="start" name="提交申请" flowable:formKey="leaveStartForm"/>
+
+        <sequenceFlow id="f1" sourceRef="start" targetRef="deptLeaderApproval"/>
+
+        <userTask id="deptLeaderApproval" name="部门领导审批"
+                  flowable:assignee="${deptLeaderId}" flowable:formKey="leaveApprovalForm">
+            <documentation>由申请人所在部门的负责人审批; 若申请人本人是部门负责人, 自动由上级部门负责人审批。</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" delegateExpression="${approvalVariableResetListener}"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="fDeptResult" sourceRef="deptLeaderApproval" targetRef="gwDept"/>
+
+        <exclusiveGateway id="gwDept" name="部门领导审批结果"/>
+
+        <sequenceFlow id="fDeptReject" name="驳回" sourceRef="gwDept" targetRef="endRejected">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == false}]]></conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="fDeptApprove" name="同意" sourceRef="gwDept" targetRef="gwDays">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == true}]]></conditionExpression>
+        </sequenceFlow>
+
+        <exclusiveGateway id="gwDays" name="请假天数"/>
+
+        <sequenceFlow id="fShort" name="不超过3天" sourceRef="gwDays" targetRef="endApproved">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${days <= 3}]]></conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="fLong" name="超过3天" sourceRef="gwDays" targetRef="upperLeaderApproval">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${days > 3}]]></conditionExpression>
+        </sequenceFlow>
+
+        <userTask id="upperLeaderApproval" name="上级领导审批"
+                  flowable:assignee="${upperLeaderId}" flowable:formKey="leaveApprovalForm">
+            <documentation>请假超过3天, 由申请人所在部门的上一级部门负责人审批。</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" delegateExpression="${approvalVariableResetListener}"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="fUpperResult" sourceRef="upperLeaderApproval" targetRef="gwUpper"/>
+
+        <exclusiveGateway id="gwUpper" name="上级领导审批结果"/>
+
+        <sequenceFlow id="fUpperPass" name="同意" sourceRef="gwUpper" targetRef="endApproved">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == true}]]></conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="fUpperReject" name="驳回" sourceRef="gwUpper" targetRef="endRejected">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == false}]]></conditionExpression>
+        </sequenceFlow>
+
+        <endEvent id="endApproved" name="审批通过"/>
+
+        <endEvent id="endRejected" name="审批驳回"/>
+    </process>
+
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="leaveProcess">
+            <bpmndi:BPMNShape id="Shape_start" bpmnElement="start">
+                <omgdc:Bounds x="60" y="160" width="30" height="30"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_deptLeaderApproval" bpmnElement="deptLeaderApproval">
+                <omgdc:Bounds x="140" y="135" width="120" height="80"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_gwDept" bpmnElement="gwDept">
+                <omgdc:Bounds x="310" y="155" width="40" height="40"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_gwDays" bpmnElement="gwDays">
+                <omgdc:Bounds x="400" y="155" width="40" height="40"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_upperLeaderApproval" bpmnElement="upperLeaderApproval">
+                <omgdc:Bounds x="490" y="135" width="120" height="80"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_gwUpper" bpmnElement="gwUpper">
+                <omgdc:Bounds x="660" y="155" width="40" height="40"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_endApproved" bpmnElement="endApproved">
+                <omgdc:Bounds x="740" y="161" width="28" height="28"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_endRejected" bpmnElement="endRejected">
+                <omgdc:Bounds x="316" y="300" width="28" height="28"/>
+            </bpmndi:BPMNShape>
+
+            <bpmndi:BPMNEdge id="Edge_f1" bpmnElement="f1">
+                <omgdi:waypoint x="90" y="175"/>
+                <omgdi:waypoint x="140" y="175"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fDeptResult" bpmnElement="fDeptResult">
+                <omgdi:waypoint x="260" y="175"/>
+                <omgdi:waypoint x="310" y="175"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fDeptApprove" bpmnElement="fDeptApprove">
+                <omgdi:waypoint x="350" y="175"/>
+                <omgdi:waypoint x="400" y="175"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fDeptReject" bpmnElement="fDeptReject">
+                <omgdi:waypoint x="330" y="195"/>
+                <omgdi:waypoint x="330" y="300"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fShort" bpmnElement="fShort">
+                <omgdi:waypoint x="420" y="195"/>
+                <omgdi:waypoint x="420" y="250"/>
+                <omgdi:waypoint x="754" y="250"/>
+                <omgdi:waypoint x="754" y="189"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fLong" bpmnElement="fLong">
+                <omgdi:waypoint x="440" y="175"/>
+                <omgdi:waypoint x="490" y="175"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fUpperResult" bpmnElement="fUpperResult">
+                <omgdi:waypoint x="610" y="175"/>
+                <omgdi:waypoint x="660" y="175"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fUpperPass" bpmnElement="fUpperPass">
+                <omgdi:waypoint x="700" y="175"/>
+                <omgdi:waypoint x="740" y="175"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fUpperReject" bpmnElement="fUpperReject">
+                <omgdi:waypoint x="680" y="195"/>
+                <omgdi:waypoint x="680" y="314"/>
+                <omgdi:waypoint x="344" y="314"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>

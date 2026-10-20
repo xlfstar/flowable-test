@@ -1,0 +1,4 @@
+[
+  {"key":"supplementNote","label":"补充说明","type":"textarea","required":true,"span":2,"placeholder":"请说明需要补充或修正的资料"},
+  {"key":"supplementItems","label":"需补充的资料","type":"checkbox","span":2,"options":[{"label":"合同扫描件","value":"contractScan"},{"label":"税务报道截图","value":"taxReport"},{"label":"会计准则备案截图","value":"accountingStandard"},{"label":"账号密码","value":"credentials"},{"label":"期初资料","value":"initialData"},{"label":"其他","value":"other"}]}
+]

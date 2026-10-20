@@ -1,0 +1,5 @@
+[
+  {"key":"section_dispatch","label":"顾问主管派工","type":"section","span":2},
+  {"key":"consultantId","label":"选择顾问","type":"user","role":"consultant","required":true,"span":2},
+  {"key":"comment","label":"派工说明","type":"textarea","span":2,"placeholder":"可填写交接重点或注意事项"}
+]

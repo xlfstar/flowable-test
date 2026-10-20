@@ -1,0 +1,10 @@
+[
+  {"key":"section_finance","label":"财务审核","type":"section","span":2},
+  {"key":"financeContractScanComplete","label":"业务员是否已上传纸质合同扫描件","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}],"span":2},
+  {"key":"financeContractScanConsistent","label":"扫描件是否完整，合同开始年月与金额是否与系统表单一致","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}],"span":2},
+  {"key":"financeTaxReportCompleted","label":"税务是否已完成报道","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"financeAccountingStandardProvided","label":"会计准则是否已提供","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"financeFullYearPaymentReceived","label":"款项是否已收完整年","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"financeResult","label":"财务审核结论","type":"radio","required":true,"span":2,"options":[{"label":"通过（以上均为是）","value":"pass"},{"label":"退回补充资料","value":"reject"}]},
+  {"key":"comment","label":"审核意见","type":"textarea","span":2,"placeholder":"请输入审核意见(可选)"}
+]

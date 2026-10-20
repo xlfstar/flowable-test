@@ -1,0 +1,14 @@
+[
+  {"key":"section_accounting","label":"会计审核","type":"section","span":2},
+  {"key":"accountingAccountSetEstablished","label":"是否建立好账套","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"accountingEtaxPasswordCorrect","label":"电子税务局账号密码是否正确","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"accountingIndividualTaxPasswordCorrect","label":"个税申报密码是否正确","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"accountingInitialDataComplete","label":"期初资料是否齐全","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"accountingOverdue","label":"是否存在逾期","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"accountingTaxOwed","label":"是否存在欠税款","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"accountingViolations","label":"是否存在违法违章","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"accountingOldAccountIssue","label":"客户期初旧账问题反馈","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"accountingOldAccountRemark","label":"旧账问题说明","type":"textarea","span":2,"visibleWhen":[{"field":"accountingOldAccountIssue","equals":true}],"placeholder":"请说明旧账问题或截图名称（本流程暂不上传文件）"},
+  {"key":"accountingResult","label":"会计审核结论","type":"radio","required":true,"span":2,"options":[{"label":"通过","value":"pass"},{"label":"退回重新派工","value":"reject"}]},
+  {"key":"comment","label":"审核意见","type":"textarea","span":2}
+]

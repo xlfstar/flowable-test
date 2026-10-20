@@ -1,0 +1,7 @@
+[
+  {"key":"section_final","label":"财务最终确认","type":"section","span":2},
+  {"key":"finalHandoverMonth","label":"最终完成交接月份","type":"input","required":true,"placeholder":"如 2026-10"},
+  {"key":"commissionStartMonth","label":"开始核算提成月份","type":"input","required":true,"placeholder":"如 2026-11"},
+  {"key":"finalResult","label":"最终确认结果","type":"radio","required":true,"span":2,"options":[{"label":"确认完成","value":"pass"},{"label":"退回","value":"reject"}]},
+  {"key":"comment","label":"确认说明","type":"textarea","span":2}
+]

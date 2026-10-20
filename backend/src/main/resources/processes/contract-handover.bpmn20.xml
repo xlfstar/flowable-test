@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             targetNamespace="http://example.com/flowable">
+
+    <process id="contractHandoverProcess" name="记账合同交接流程" isExecutable="true">
+        <documentation>业务员提交记账合同交接资料，财务审核通过后由财务选择顾问主管和会计主管，顾问主管派工后顾问审核，会计主管派工后会计审核，最后由财务确认完成交接。</documentation>
+
+        <startEvent id="start" name="业务员提交交接资料" flowable:formKey="contractHandoverStartForm"/>
+
+        <sequenceFlow id="f1" sourceRef="start" targetRef="financeReview"/>
+
+        <userTask id="financeReview" name="财务审核" flowable:candidateGroups="finance"
+                  flowable:formKey="contractFinanceReviewForm">
+            <documentation>财务核验合同扫描件、税务报道、会计准则、款项等；全部为是才可进入派工，否则退回业务员补充资料。</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" delegateExpression="${approvalVariableResetListener}"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="f2" sourceRef="financeReview" targetRef="financeGateway"/>
+
+        <exclusiveGateway id="financeGateway" name="财务审核结果" default="fFinanceReject"/>
+
+        <sequenceFlow id="fFinanceReject" name="退回补充" sourceRef="financeGateway" targetRef="supplement"/>
+
+        <sequenceFlow id="fFinancePass" name="通过" sourceRef="financeGateway" targetRef="financeDispatch">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${financeResult == 'pass' && financeContractScanComplete == true && financeContractScanConsistent == true && financeTaxReportCompleted == true && financeAccountingStandardProvided == true && financeFullYearPaymentReceived == true}]]></conditionExpression>
+        </sequenceFlow>
+
+        <userTask id="supplement" name="业务员补充资料" flowable:assignee="${initiator}"
+                  flowable:formKey="contractSupplementForm">
+            <documentation>财务审核不通过时退回业务员补充或修正资料，补充后重新提交财务审核。</documentation>
+        </userTask>
+
+        <sequenceFlow id="fSupplementBack" sourceRef="supplement" targetRef="financeReview"/>
+
+        <userTask id="financeDispatch" name="财务派工" flowable:candidateGroups="finance"
+                  flowable:formKey="financeDispatchForm">
+            <documentation>财务选择本次交接的顾问主管和会计主管，分别派工给两位主管。</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" delegateExpression="${approvalVariableResetListener}"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="fFinanceDispatch" sourceRef="financeDispatch" targetRef="consultantDispatch"/>
+
+        <userTask id="consultantDispatch" name="顾问主管派工"
+                  flowable:assignee="${approverResolver.user(consultantManagerId)}"
+                  flowable:formKey="consultantDispatchForm">
+            <documentation>财务选择的顾问主管选择顾问，派工后由顾问进行审核。</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" delegateExpression="${approvalVariableResetListener}"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="fConsultantDispatch" sourceRef="consultantDispatch" targetRef="consultantReview"/>
+
+        <userTask id="consultantReview" name="顾问审核"
+                  flowable:assignee="${approverResolver.user(consultantId)}"
+                  flowable:formKey="consultantReviewForm">
+            <documentation>顾问审核客户创建、账号密码、期初资料、逾期、欠税、违法违章、工伤、银行授权、首电拉群等事项。</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" delegateExpression="${approvalVariableResetListener}"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="fConsultantResult" sourceRef="consultantReview" targetRef="consultantGateway"/>
+
+        <exclusiveGateway id="consultantGateway" name="顾问审核结果" default="fConsultantReject"/>
+
+        <sequenceFlow id="fConsultantReject" name="退回业务员补充资料" sourceRef="consultantGateway" targetRef="supplement"/>
+
+        <sequenceFlow id="fConsultantPass" name="通过" sourceRef="consultantGateway" targetRef="accountingDispatch">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${consultantResult == 'pass'}]]></conditionExpression>
+        </sequenceFlow>
+
+        <userTask id="accountingDispatch" name="会计主管派工"
+                  flowable:assignee="${approverResolver.user(accountingManagerId)}"
+                  flowable:formKey="accountingDispatchForm">
+            <documentation>财务选择的会计主管选择会计，派工后由会计进行审核。</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" delegateExpression="${approvalVariableResetListener}"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="fAccountingDispatch" sourceRef="accountingDispatch" targetRef="accountingReview"/>
+
+        <userTask id="accountingReview" name="会计审核"
+                  flowable:assignee="${approverResolver.user(accountantId)}"
+                  flowable:formKey="accountingReviewForm">
+            <documentation>会计审核账套、账号密码、期初资料、逾期、欠税、违法违章、旧账问题等事项。</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" delegateExpression="${approvalVariableResetListener}"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="fAccountingResult" sourceRef="accountingReview" targetRef="accountingGateway"/>
+
+        <exclusiveGateway id="accountingGateway" name="会计审核结果" default="fAccountingReject"/>
+
+        <sequenceFlow id="fAccountingReject" name="退回重新派工" sourceRef="accountingGateway" targetRef="accountingDispatch"/>
+
+        <sequenceFlow id="fAccountingPass" name="通过" sourceRef="accountingGateway" targetRef="financeFinal">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${accountingResult == 'pass'}]]></conditionExpression>
+        </sequenceFlow>
+
+        <userTask id="financeFinal" name="财务最终确认" flowable:candidateGroups="finance"
+                  flowable:formKey="contractFinanceFinalForm">
+            <documentation>财务确认最终完成交接月份和开始核算提成月份。</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" delegateExpression="${approvalVariableResetListener}"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="fFinalResult" sourceRef="financeFinal" targetRef="financeFinalGateway"/>
+
+        <exclusiveGateway id="financeFinalGateway" name="财务最终确认结果" default="fFinalReject"/>
+
+        <sequenceFlow id="fFinalPass" name="确认完成" sourceRef="financeFinalGateway" targetRef="endApproved">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${finalResult == 'pass'}]]></conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="fFinalReject" name="退回" sourceRef="financeFinalGateway" targetRef="endRejected"/>
+
+        <endEvent id="endApproved" name="交接完成"/>
+        <endEvent id="endRejected" name="财务退回"/>
+    </process>
+
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="contractHandoverProcess">
+            <bpmndi:BPMNShape id="Shape_start" bpmnElement="start">
+                <omgdc:Bounds x="60" y="300" width="30" height="30"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_financeReview" bpmnElement="financeReview">
+                <omgdc:Bounds x="140" y="275" width="120" height="80"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_financeGateway" bpmnElement="financeGateway">
+                <omgdc:Bounds x="310" y="295" width="40" height="40"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_financeDispatch" bpmnElement="financeDispatch">
+                <omgdc:Bounds x="380" y="275" width="140" height="80"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_supplement" bpmnElement="supplement">
+                <omgdc:Bounds x="260" y="430" width="140" height="80"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_consultantDispatch" bpmnElement="consultantDispatch">
+                <omgdc:Bounds x="560" y="275" width="140" height="80"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_consultantReview" bpmnElement="consultantReview">
+                <omgdc:Bounds x="740" y="275" width="120" height="80"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_consultantGateway" bpmnElement="consultantGateway">
+                <omgdc:Bounds x="900" y="295" width="40" height="40"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_accountingDispatch" bpmnElement="accountingDispatch">
+                <omgdc:Bounds x="980" y="275" width="140" height="80"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_accountingReview" bpmnElement="accountingReview">
+                <omgdc:Bounds x="1160" y="275" width="120" height="80"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_accountingGateway" bpmnElement="accountingGateway">
+                <omgdc:Bounds x="1320" y="295" width="40" height="40"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_financeFinal" bpmnElement="financeFinal">
+                <omgdc:Bounds x="1400" y="275" width="140" height="80"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_financeFinalGateway" bpmnElement="financeFinalGateway">
+                <omgdc:Bounds x="1580" y="295" width="40" height="40"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_endApproved" bpmnElement="endApproved">
+                <omgdc:Bounds x="1660" y="301" width="28" height="28"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Shape_endRejected" bpmnElement="endRejected">
+                <omgdc:Bounds x="1460" y="500" width="28" height="28"/>
+            </bpmndi:BPMNShape>
+
+            <bpmndi:BPMNEdge id="Edge_f1" bpmnElement="f1">
+                <omgdi:waypoint x="90" y="315"/>
+                <omgdi:waypoint x="140" y="315"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_f2" bpmnElement="f2">
+                <omgdi:waypoint x="260" y="315"/>
+                <omgdi:waypoint x="310" y="315"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fFinanceReject" bpmnElement="fFinanceReject">
+                <omgdi:waypoint x="330" y="335"/>
+                <omgdi:waypoint x="330" y="430"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fFinancePass" bpmnElement="fFinancePass">
+                <omgdi:waypoint x="350" y="315"/>
+                <omgdi:waypoint x="380" y="315"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fFinanceDispatch" bpmnElement="fFinanceDispatch">
+                <omgdi:waypoint x="520" y="315"/>
+                <omgdi:waypoint x="560" y="315"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fSupplementBack" bpmnElement="fSupplementBack">
+                <omgdi:waypoint x="260" y="470"/>
+                <omgdi:waypoint x="200" y="470"/>
+                <omgdi:waypoint x="200" y="355"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fConsultantDispatch" bpmnElement="fConsultantDispatch">
+                <omgdi:waypoint x="700" y="315"/>
+                <omgdi:waypoint x="740" y="315"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fConsultantResult" bpmnElement="fConsultantResult">
+                <omgdi:waypoint x="860" y="315"/>
+                <omgdi:waypoint x="900" y="315"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fConsultantReject" bpmnElement="fConsultantReject">
+                <omgdi:waypoint x="920" y="335"/>
+                <omgdi:waypoint x="920" y="470"/>
+                <omgdi:waypoint x="400" y="470"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fConsultantPass" bpmnElement="fConsultantPass">
+                <omgdi:waypoint x="940" y="315"/>
+                <omgdi:waypoint x="980" y="315"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fAccountingDispatch" bpmnElement="fAccountingDispatch">
+                <omgdi:waypoint x="1120" y="315"/>
+                <omgdi:waypoint x="1160" y="315"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fAccountingResult" bpmnElement="fAccountingResult">
+                <omgdi:waypoint x="1280" y="315"/>
+                <omgdi:waypoint x="1320" y="315"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fAccountingReject" bpmnElement="fAccountingReject">
+                <omgdi:waypoint x="1340" y="335"/>
+                <omgdi:waypoint x="1340" y="410"/>
+                <omgdi:waypoint x="1050" y="410"/>
+                <omgdi:waypoint x="1050" y="355"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fAccountingPass" bpmnElement="fAccountingPass">
+                <omgdi:waypoint x="1360" y="315"/>
+                <omgdi:waypoint x="1400" y="315"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fFinalResult" bpmnElement="fFinalResult">
+                <omgdi:waypoint x="1540" y="315"/>
+                <omgdi:waypoint x="1580" y="315"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fFinalPass" bpmnElement="fFinalPass">
+                <omgdi:waypoint x="1620" y="315"/>
+                <omgdi:waypoint x="1660" y="315"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Edge_fFinalReject" bpmnElement="fFinalReject">
+                <omgdi:waypoint x="1600" y="335"/>
+                <omgdi:waypoint x="1600" y="514"/>
+                <omgdi:waypoint x="1488" y="514"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>

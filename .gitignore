@@ -1,0 +1,37 @@
+# ---- Java / Maven ----
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.log
+*.jar
+!.mvn/wrapper/*.jar
+
+# ---- IDE ----
+.idea/
+*.iml
+.vscode/
+*.swp
+.settings/
+.classpath
+.project
+
+# ---- Node / Frontend ----
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+
+# ---- Uploads ----
+uploads/
+
+# ---- Runtime / Agent ----
+.omo/
+*.pid

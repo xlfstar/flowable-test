@@ -1,0 +1,6 @@
+[
+  {"key":"section_finance_dispatch","label":"财务派工","type":"section","span":2},
+  {"key":"consultantManagerId","label":"选择顾问主管","type":"user","role":"consultant_manager","required":true,"span":2},
+  {"key":"accountingManagerId","label":"选择会计主管","type":"user","role":"accounting_manager","required":true,"span":2},
+  {"key":"comment","label":"派工说明","type":"textarea","span":2,"placeholder":"可填写派工要求或注意事项"}
+]

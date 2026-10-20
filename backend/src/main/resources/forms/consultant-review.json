@@ -1,0 +1,17 @@
+[
+  {"key":"section_consultant","label":"顾问审核","type":"section","span":2},
+  {"key":"consultantYiqiCustomerCreated","label":"亿企客户是否已创建","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"consultantEtaxPasswordCorrect","label":"电子税务局账号密码是否正确","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"consultantIndividualTaxPasswordCorrect","label":"个税申报密码是否正确","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"consultantInitialDataComplete","label":"期初资料是否齐全","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"consultantOverdue","label":"是否存在逾期","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"consultantTaxOwed","label":"是否存在欠税款","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"consultantViolations","label":"是否存在违法违章","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"consultantWorkInjuryAbnormal","label":"检查工伤是否存在异常状态","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"consultantBankAuthorizationHandled","label":"银行授权是否处理好","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"consultantBankAuthorizationRemark","label":"银行授权备注说明","type":"textarea","span":2,"visibleWhen":[{"field":"consultantBankAuthorizationHandled","equals":false}],"placeholder":"银行授权未处理时请说明原因"},
+  {"key":"consultantFirstCallWithin3Days","label":"3个工作日内是否已首电、拉群、打招呼","type":"radio","required":true,"valueType":"boolean","options":[{"label":"是","value":"true"},{"label":"否","value":"false"}]},
+  {"key":"consultantFirstCallProof","label":"首电/拉群截图说明","type":"input","span":2,"visibleWhen":[{"field":"consultantFirstCallWithin3Days","equals":true}],"placeholder":"填写截图名称或说明（本流程暂不上传文件）"},
+  {"key":"consultantResult","label":"顾问审核结论","type":"radio","required":true,"span":2,"options":[{"label":"通过","value":"pass"},{"label":"退回重新派工","value":"reject"}]},
+  {"key":"comment","label":"审核意见","type":"textarea","span":2}
+]

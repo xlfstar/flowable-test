@@ -1,0 +1,68 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: flowable-demo
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/flowable_demo?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true
+    username: root
+    password: root
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 30MB
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+
+# Flowable 引擎配置
+flowable:
+  database-schema-update: true
+  async-executor-activate: true
+  history-level: full
+  activity-font-name: 微软雅黑
+  label-font-name: 微软雅黑
+  annotation-font-name: 微软雅黑
+  # 启动时自动部署 classpath:/processes/ 下的流程 (Flowable 默认行为)
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# JWT 配置
+jwt:
+  secret: flowable-demo-secret-key-change-me-in-production-0123456789abcdef
+  # 过期时间(秒)
+  expire: 86400
+
+app:
+  # 上传文件存储目录, 相对路径基于后端启动目录
+  upload-dir: ./uploads
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    root: info
+    com.example.flowable: debug
+    org.flowable.engine.impl.persistence: warn
